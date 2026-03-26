@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useBrowserStore } from "../../store/browserStore";
 
 export default function AddressBar() {
   const { tabs, updateTabUrl } = useBrowserStore();
   const activeTab = tabs.find((tab) => tab.isActive);
   const [value, setValue] = useState(activeTab?.url || "");
+
+  useEffect(() => {
+    setValue(activeTab?.url || "");
+  }, [activeTab]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,11 +23,12 @@ export default function AddressBar() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex-1">
+    <form className="address-form" onSubmit={handleSubmit}>
       <input
+        className="address-input"
+        type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="w-full px-4 py-2 rounded-xl bg-zinc-800 text-white outline-none"
         placeholder="Enter URL..."
       />
     </form>

@@ -1,12 +1,12 @@
-import AddressBar from "../browser/AddressBar";
 import TabBar from "../browser/TabBar";
+import AddressBar from "../browser/AddressBar";
 
 export default function TopBar() {
   return (
-    <div className="border-b border-zinc-800 bg-zinc-950">
+    <div className="topbar">
       <TabBar />
-      <div className="flex items-center gap-3 px-4 py-3">
-        <div className="font-bold text-blue-500">Intentra</div>
+      <div className="toolbar-row">
+        <div className="brand">Intentra</div>
         <AddressBar />
       </div>
     </div>

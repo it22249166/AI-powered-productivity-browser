@@ -1,15 +1,15 @@
 import TopBar from "./components/layout/TopBar";
-import LeftSidebar from "./components/layout/LeftSidebar";
+import LeftSideBar from "./components/layout/LeftSideBar";
 import RightPanel from "./components/layout/RightPanel";
 import BrowserView from "./components/browser/BrowserView";
 
 export default function App() {
   return (
-    <div className="h-screen bg-black text-white flex flex-col">
+    <div className="app-shell">
       <TopBar />
-      <div className="flex flex-1 overflow-hidden">
-        <LeftSidebar />
-        <div className="flex-1 bg-zinc-950">
+      <div className="main-layout">
+        <LeftSideBar />
+        <div className="browser-center">
           <BrowserView />
         </div>
         <RightPanel />

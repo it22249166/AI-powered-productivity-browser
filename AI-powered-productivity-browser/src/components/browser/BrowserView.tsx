@@ -5,14 +5,16 @@ export default function BrowserView() {
     state.tabs.find((tab) => tab.isActive)
   );
 
-  if (!activeTab) return null;
+  if (!activeTab) {
+    return <div className="browser-placeholder">No active tab</div>;
+  }
 
   return (
-    <div className="h-full w-full">
-      <webview
-        src={activeTab.url}
-        style={{ width: "100%", height: "100%" }}
-      />
-    </div>
+    <iframe
+      key={activeTab.id}
+      src={activeTab.url}
+      title={activeTab.title}
+      className="browser-view"
+    />
   );
 }
