@@ -1,7 +1,9 @@
 {
+  "type": "module",
   "main": "electron/main.ts",
   "scripts": {
-    "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "predev": "kill-port 5173 || true",
+    "dev": "concurrently \"vite\" \"wait-on tcp:5173 && electron .\"",
     "build": "vite build",
     "start": "electron ."
   },
@@ -10,12 +12,17 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "autoprefixer": "^10.4.27",
     "concurrently": "^9.2.1",
+    "kill-port": "^2.0.1",
+    "postcss": "^8.5.8",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "tailwindcss": "^4.2.2",
     "vite": "^8.0.2",
     "wait-on": "^9.0.4"
   }

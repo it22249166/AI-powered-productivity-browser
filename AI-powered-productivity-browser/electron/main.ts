@@ -13,15 +13,16 @@ function createWindow() {
     minWidth: 1100,
     minHeight: 700,
     webPreferences: {
-  preload: path.join(__dirname, "preload.js"),
-  contextIsolation: true,
-  nodeIntegration: false,
-  webviewTag: true,
-}
+      preload: path.join(__dirname, "preload.ts"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      webviewTag: true,
+    },
   });
 
   if (isDev) {
     win.loadURL("http://localhost:5173");
+    win.webContents.openDevTools();
   } else {
     win.loadFile(path.join(__dirname, "../dist/index.html"));
   }
