@@ -16,6 +16,7 @@ type BrowserState = {
   setActiveTab: (id: string) => void;
   updateTabUrl: (id: string, url: string) => void;
   updateTabState: (id: string, nextState: Partial<Tab>) => void;
+  updateTabMemory: (id: string, memory: string) => void;
   requestNavigation: (tabId: string, action: "back" | "forward" | "reload" | "stop") => void;
 };
 
@@ -26,6 +27,7 @@ const createTab = (workspaceId: string, isActive: boolean, url = HOME_URL): Tab 
   title: "New Tab",
   url,
   workspaceId,
+  memory: "",
   isActive,
   isLoading: false,
   canGoBack: false,
@@ -150,6 +152,11 @@ export const useBrowserStore = create<BrowserState>()(
           tabs: state.tabs.map((tab) => (tab.id === id ? { ...tab, ...nextState } : tab)),
         })),
 
+      updateTabMemory: (id, memory) =>
+        set((state) => ({
+          tabs: state.tabs.map((tab) => (tab.id === id ? { ...tab, memory } : tab)),
+        })),
+
       requestNavigation: (tabId, action) =>
         set({
           navigationCommand: {
@@ -161,6 +168,18 @@ export const useBrowserStore = create<BrowserState>()(
     }),
     {
       name: "intentra-browser",
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<BrowserState> | undefined;
+
+        return {
+          ...currentState,
+          ...persisted,
+          tabs: (persisted?.tabs || []).map((tab) => ({
+            memory: "",
+            ...tab,
+          })),
+        };
+      },
     }
   )
 );
