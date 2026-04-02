@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { useBrowserStore } from "../../store/browserStore";
+import { useWorkspaceStore } from "../../store/workspaceStore";
 
 export default function AddressBar() {
+  const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const { tabs, updateTabUrl } = useBrowserStore();
-  const activeTab = tabs.find((tab) => tab.isActive);
+  const activeTab = tabs.find(
+    (tab) => tab.workspaceId === activeWorkspaceId && tab.isActive
+  );
   const [value, setValue] = useState(activeTab?.url || "");
 
   useEffect(() => {
@@ -13,13 +17,7 @@ export default function AddressBar() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeTab) return;
-
-    const formatted =
-      value.startsWith("http://") || value.startsWith("https://")
-        ? value
-        : `https://${value}`;
-
-    updateTabUrl(activeTab.id, formatted);
+    updateTabUrl(activeTab.id, value);
   };
 
   return (
@@ -29,7 +27,8 @@ export default function AddressBar() {
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Enter URL..."
+        placeholder="Search or enter a website"
+        spellCheck={false}
       />
     </form>
   );

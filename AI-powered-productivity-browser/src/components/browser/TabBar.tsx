@@ -1,11 +1,14 @@
 import { useBrowserStore } from "../../store/browserStore";
+import { useWorkspaceStore } from "../../store/workspaceStore";
 
 export default function TabBar() {
+  const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const { tabs, addTab, closeTab, setActiveTab } = useBrowserStore();
+  const workspaceTabs = tabs.filter((tab) => tab.workspaceId === activeWorkspaceId);
 
   return (
     <div className="tabbar">
-      {tabs.map((tab) => (
+      {workspaceTabs.map((tab) => (
         <div
           key={tab.id}
           className={`tab ${tab.isActive ? "active" : ""}`}
@@ -23,7 +26,7 @@ export default function TabBar() {
           </button>
         </div>
       ))}
-      <button className="tab-add-btn" onClick={addTab}>
+      <button className="tab-add-btn" type="button" onClick={() => addTab(activeWorkspaceId)}>
         +
       </button>
     </div>

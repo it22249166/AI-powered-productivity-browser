@@ -1,11 +1,10 @@
 {
-  "type": "module",
-  "main": "electron/main.ts",
+  "main": "electron/main.cjs",
   "scripts": {
     "predev": "kill-port 5173 || true",
-    "dev": "concurrently \"vite\" \"wait-on tcp:5173 && electron .\"",
+    "dev": "concurrently \"vite\" \"wait-on tcp:5173 && env -u ELECTRON_RUN_AS_NODE electron .\"",
     "build": "vite build",
-    "start": "electron ."
+    "start": "env -u ELECTRON_RUN_AS_NODE electron ."
   },
   "dependencies": {
     "electron": "^41.0.4",

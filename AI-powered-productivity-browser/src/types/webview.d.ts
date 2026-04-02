@@ -3,3 +3,11 @@ declare namespace JSX {
     webview: any;
   }
 }
+
+declare global {
+  interface Window {
+    electronAPI: Record<string, never>;
+  }
+}
+
+export {};
