@@ -9,12 +9,12 @@ type BrowserState = {
     action: "back" | "forward" | "reload" | "stop";
     timestamp: number;
   } | null;
-  addTab: (workspaceId: string, url?: string) => void;
+  addTab: (workspaceId: string, url?: string, searchRegion?: "default" | "india") => void;
   closeTab: (id: string) => void;
   closeWorkspaceTabs: (workspaceId: string) => void;
   ensureWorkspaceTab: (workspaceId: string) => void;
   setActiveTab: (id: string) => void;
-  updateTabUrl: (id: string, url: string) => void;
+  updateTabUrl: (id: string, url: string, searchRegion?: "default" | "india") => void;
   updateTabState: (id: string, nextState: Partial<Tab>) => void;
   updateTabMemory: (id: string, memory: string) => void;
   requestNavigation: (tabId: string, action: "back" | "forward" | "reload" | "stop") => void;
@@ -34,7 +34,7 @@ const createTab = (workspaceId: string, isActive: boolean, url = HOME_URL): Tab 
   canGoForward: false,
 });
 
-const normalizeUrl = (value: string) => {
+const normalizeUrl = (value: string, searchRegion: "default" | "india" = "default") => {
   const trimmed = value.trim();
 
   if (!trimmed) {
@@ -59,7 +59,17 @@ const normalizeUrl = (value: string) => {
     return `${protocol}${trimmed}`;
   }
 
-  return `https://duckduckgo.com/?q=${encodeURIComponent(trimmed)}`;
+  const params = new URLSearchParams({
+    q: trimmed,
+  });
+
+  if (searchRegion === "india") {
+    params.set("kl", "in-en");
+    params.set("kc", "1");
+    params.set("ia", "web");
+  }
+
+  return `https://duckduckgo.com/?${params.toString()}`;
 };
 
 export const useBrowserStore = create<BrowserState>()(
@@ -68,14 +78,14 @@ export const useBrowserStore = create<BrowserState>()(
       tabs: [],
       navigationCommand: null,
 
-      addTab: (workspaceId, url = HOME_URL) =>
+      addTab: (workspaceId, url = HOME_URL, searchRegion = "default") =>
         set((state) => ({
           tabs: [
             ...state.tabs.map((tab) => ({
               ...tab,
               isActive: tab.workspaceId === workspaceId ? false : tab.isActive,
             })),
-            createTab(workspaceId, true, normalizeUrl(url)),
+            createTab(workspaceId, true, normalizeUrl(url, searchRegion)),
           ],
         })),
 
@@ -134,13 +144,13 @@ export const useBrowserStore = create<BrowserState>()(
           };
         }),
 
-      updateTabUrl: (id, url) =>
+      updateTabUrl: (id, url, searchRegion = "default") =>
         set((state) => ({
           tabs: state.tabs.map((tab) =>
             tab.id === id
               ? {
                   ...tab,
-                  url: normalizeUrl(url),
+                  url: normalizeUrl(url, searchRegion),
                   isLoading: true,
                 }
               : tab

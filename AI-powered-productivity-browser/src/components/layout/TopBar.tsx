@@ -2,6 +2,7 @@ import TabBar from "../browser/TabBar";
 import AddressBar from "../browser/AddressBar";
 import NavigationButtons from "../browser/NavigationButtons";
 import { useWorkspaceStore } from "../../store/workspaceStore";
+import { useRegionStore } from "../../store/regionStore";
 
 type TopBarProps = {
   showLeftPanel: boolean;
@@ -24,6 +25,8 @@ export default function TopBar({
   const activeWorkspace = useWorkspaceStore((state) =>
     state.workspaces.find((workspace) => workspace.id === activeWorkspaceId)
   );
+  const searchRegion = useRegionStore((state) => state.searchRegion);
+  const setSearchRegion = useRegionStore((state) => state.setSearchRegion);
 
   return (
     <div className="topbar">
@@ -34,6 +37,15 @@ export default function TopBar({
           <span className="topbar-status-dot" />
           <span>{activeWorkspace?.intent || "research"} mode</span>
         </div>
+        <button
+          type="button"
+          className={`topbar-region ${searchRegion === "india" ? "active" : ""}`}
+          onClick={() =>
+            setSearchRegion(searchRegion === "india" ? "default" : "india")
+          }
+        >
+          <span>{searchRegion === "india" ? "India Search" : "Default Search"}</span>
+        </button>
         <div className="toolbar-tools">
           <button
             type="button"

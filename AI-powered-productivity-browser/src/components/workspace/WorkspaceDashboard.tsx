@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useBrowserStore } from "../../store/browserStore";
 import { useWorkspaceStore } from "../../store/workspaceStore";
 import type { IntentMode } from "../../types/browser";
+import { exportWorkspaceMarkdown, runAssistantAction } from "../../utils/workspaceAssistant";
 
 const intentCopy: Record<
   IntentMode,
@@ -62,10 +63,13 @@ export default function WorkspaceDashboard() {
     state.workspaces.find((workspace) => workspace.id === activeWorkspaceId)
   );
   const updateWorkspaceGoal = useWorkspaceStore((state) => state.updateWorkspaceGoal);
+  const appendWorkspaceNotes = useWorkspaceStore((state) => state.appendWorkspaceNotes);
   const addSavedSource = useWorkspaceStore((state) => state.addSavedSource);
   const removeSavedSource = useWorkspaceStore((state) => state.removeSavedSource);
   const addTask = useWorkspaceStore((state) => state.addTask);
+  const addTasks = useWorkspaceStore((state) => state.addTasks);
   const toggleTask = useWorkspaceStore((state) => state.toggleTask);
+  const setAssistantResult = useWorkspaceStore((state) => state.setAssistantResult);
   const activeTab = useBrowserStore((state) =>
     state.tabs.find((tab) => tab.workspaceId === activeWorkspaceId && tab.isActive)
   );
@@ -110,8 +114,8 @@ export default function WorkspaceDashboard() {
       return "Open a page and the workspace will start generating summaries, compare signals, and task suggestions.";
     }
 
-    if (selectedPrompt) {
-      return `${selectedPrompt} is queued for ${activeTab.title || "this page"}. The copilot can turn the result into notes, tasks, or a saved source.`;
+    if (activeWorkspace.assistantResult && selectedPrompt) {
+      return activeWorkspace.assistantResult.content;
     }
 
     if (activeWorkspace.intent === "compare" && activeWorkspace.savedSources.length < 2) {
@@ -124,6 +128,53 @@ export default function WorkspaceDashboard() {
   if (!activeWorkspace || !currentIntent) {
     return null;
   }
+
+  const saveActivePage = () => {
+    if (!activeTab) {
+      return;
+    }
+
+    addSavedSource(activeWorkspace.id, {
+      title: activeTab.title || "Untitled source",
+      url: activeTab.url,
+      note: activeTab.memory || "Saved from the active tab.",
+    });
+  };
+
+  const runPrompt = (prompt: string) => {
+    setSelectedPrompt(prompt);
+    const outcome = runAssistantAction(prompt, activeWorkspace, activeTab);
+    setAssistantResult(activeWorkspace.id, outcome.result);
+
+    if (outcome.suggestedNotes) {
+      appendWorkspaceNotes(activeWorkspace.id, outcome.suggestedNotes);
+    }
+
+    if (outcome.suggestedTasks?.length) {
+      addTasks(activeWorkspace.id, outcome.suggestedTasks);
+    }
+
+    if (outcome.suggestedSourceNote && activeTab) {
+      addSavedSource(activeWorkspace.id, {
+        title: activeTab.title || "Untitled source",
+        url: activeTab.url,
+        note: outcome.suggestedSourceNote,
+      });
+    }
+  };
+
+  const exportWorkspace = () => {
+    const content = exportWorkspaceMarkdown(activeWorkspace);
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${activeWorkspace.name.toLowerCase().replace(/\s+/g, "-")}.md`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="workspace-dashboard">
@@ -157,16 +208,12 @@ export default function WorkspaceDashboard() {
           <button
             type="button"
             className="workspace-create hero-action-btn"
-            onClick={() =>
-              activeTab &&
-              addSavedSource(activeWorkspace.id, {
-                title: activeTab.title || "Untitled source",
-                url: activeTab.url,
-                note: activeTab.memory || "Saved from the active tab.",
-              })
-            }
+            onClick={saveActivePage}
           >
             Save this page
+          </button>
+          <button type="button" className="ghost-action-btn" onClick={exportWorkspace}>
+            Export workspace
           </button>
           <button
             type="button"
@@ -226,7 +273,7 @@ export default function WorkspaceDashboard() {
                 key={prompt}
                 type="button"
                 className={`prompt-chip ${selectedPrompt === prompt ? "active" : ""}`}
-                onClick={() => setSelectedPrompt(prompt)}
+                onClick={() => runPrompt(prompt)}
               >
                 {prompt}
               </button>
@@ -272,6 +319,28 @@ export default function WorkspaceDashboard() {
           </div>
         )}
       </div>
+
+      {activeWorkspace.assistantResult ? (
+        <div className="card source-board">
+          <div className="panel-heading">
+            <div>
+              <h3 className="section-title section-title-tight">Latest Result</h3>
+              <p className="muted">{activeWorkspace.assistantResult.actionLabel}</p>
+            </div>
+            <button
+              type="button"
+              className="ghost-action-btn"
+              onClick={() => setAssistantResult(activeWorkspace.id, null)}
+            >
+              Clear
+            </button>
+          </div>
+          <div className="assistant-preview result-preview">
+            <div className="assistant-preview-label">{activeWorkspace.assistantResult.title}</div>
+            <p>{activeWorkspace.assistantResult.content}</p>
+          </div>
+        </div>
+      ) : null}
 
       {showAdvanced ? (
         <div className="dashboard-grid advanced-grid">
@@ -334,6 +403,15 @@ export default function WorkspaceDashboard() {
             <div className="card-muted">
               Save 2 to 4 strong sources when you want to compare viewpoints side by side.
             </div>
+            {activeWorkspace.savedSources.length > 1 ? (
+              <div className="assistant-preview compare-summary">
+                <div className="assistant-preview-label">Compare snapshot</div>
+                <p>
+                  Comparing {activeWorkspace.savedSources.length} saved sources for the goal:
+                  {" "}{activeWorkspace.goal}
+                </p>
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}

@@ -1,6 +1,12 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { IntentMode, SavedSource, Workspace } from "../types/browser";
+import type {
+  AssistantResult,
+  HistoryEntry,
+  IntentMode,
+  SavedSource,
+  Workspace,
+} from "../types/browser";
 
 type WorkspaceState = {
   activeWorkspaceId: string;
@@ -11,10 +17,14 @@ type WorkspaceState = {
   updateWorkspaceIntent: (id: string, intent: IntentMode) => void;
   updateWorkspaceGoal: (id: string, goal: string) => void;
   updateWorkspaceNotes: (id: string, notes: string) => void;
+  appendWorkspaceNotes: (id: string, notes: string) => void;
   addSavedSource: (workspaceId: string, source: Omit<SavedSource, "id">) => void;
   removeSavedSource: (workspaceId: string, sourceId: string) => void;
+  addHistoryEntry: (workspaceId: string, entry: Omit<HistoryEntry, "id" | "visitedAt">) => void;
   addTask: (workspaceId: string, text: string) => void;
+  addTasks: (workspaceId: string, tasks: string[]) => void;
   toggleTask: (workspaceId: string, taskId: string) => void;
+  setAssistantResult: (workspaceId: string, result: AssistantResult | null) => void;
 };
 
 const createWorkspace = (
@@ -29,7 +39,9 @@ const createWorkspace = (
   goal,
   notes,
   savedSources: [],
+  history: [],
   tasks: [],
+  assistantResult: null,
 });
 
 const defaultWorkspaces = [
@@ -116,6 +128,26 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           ),
         })),
 
+      appendWorkspaceNotes: (id, notes) => {
+        const trimmed = notes.trim();
+        if (!trimmed) {
+          return;
+        }
+
+        set((state) => ({
+          workspaces: state.workspaces.map((workspace) =>
+            workspace.id === id
+              ? {
+                  ...workspace,
+                  notes: workspace.notes.trim()
+                    ? `${workspace.notes.trim()}\n\n${trimmed}`
+                    : trimmed,
+                }
+              : workspace
+          ),
+        }));
+      },
+
       addSavedSource: (workspaceId, source) =>
         set((state) => ({
           workspaces: state.workspaces.map((workspace) =>
@@ -146,6 +178,25 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           ),
         })),
 
+      addHistoryEntry: (workspaceId, entry) =>
+        set((state) => ({
+          workspaces: state.workspaces.map((workspace) =>
+            workspace.id === workspaceId
+              ? {
+                  ...workspace,
+                  history: [
+                    {
+                      id: crypto.randomUUID(),
+                      visitedAt: Date.now(),
+                      ...entry,
+                    },
+                    ...workspace.history.filter((item) => item.url !== entry.url),
+                  ].slice(0, 12),
+                }
+              : workspace
+          ),
+        })),
+
       addTask: (workspaceId, text) => {
         const trimmed = text.trim();
         if (!trimmed) {
@@ -171,6 +222,31 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         }));
       },
 
+      addTasks: (workspaceId, tasks) => {
+        const normalized = tasks.map((task) => task.trim()).filter(Boolean);
+        if (normalized.length === 0) {
+          return;
+        }
+
+        set((state) => ({
+          workspaces: state.workspaces.map((workspace) =>
+            workspace.id === workspaceId
+              ? {
+                  ...workspace,
+                  tasks: [
+                    ...normalized.map((task) => ({
+                      id: crypto.randomUUID(),
+                      text: task,
+                      done: false,
+                    })),
+                    ...workspace.tasks,
+                  ],
+                }
+              : workspace
+          ),
+        }));
+      },
+
       toggleTask: (workspaceId, taskId) =>
         set((state) => ({
           workspaces: state.workspaces.map((workspace) =>
@@ -182,6 +258,13 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                   ),
                 }
               : workspace
+          ),
+        })),
+
+      setAssistantResult: (workspaceId, result) =>
+        set((state) => ({
+          workspaces: state.workspaces.map((workspace) =>
+            workspace.id === workspaceId ? { ...workspace, assistantResult: result } : workspace
           ),
         })),
     }),
@@ -198,7 +281,9 @@ export const useWorkspaceStore = create<WorkspaceState>()(
             goal: "Define the outcome for this project.",
             notes: "",
             savedSources: [],
+            history: [],
             tasks: [],
+            assistantResult: null,
             ...workspace,
           })),
         };

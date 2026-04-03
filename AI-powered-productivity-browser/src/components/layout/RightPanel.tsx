@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useWorkspaceStore } from "../../store/workspaceStore";
 import { useBrowserStore } from "../../store/browserStore";
+import { buildCitationDraft, runAssistantAction } from "../../utils/workspaceAssistant";
 
 const summarizeHost = (url: string) => {
   try {
@@ -18,6 +19,10 @@ export default function RightPanel() {
     state.workspaces.find((workspace) => workspace.id === activeWorkspaceId)
   );
   const updateWorkspaceNotes = useWorkspaceStore((state) => state.updateWorkspaceNotes);
+  const appendWorkspaceNotes = useWorkspaceStore((state) => state.appendWorkspaceNotes);
+  const addSavedSource = useWorkspaceStore((state) => state.addSavedSource);
+  const addTasks = useWorkspaceStore((state) => state.addTasks);
+  const setAssistantResult = useWorkspaceStore((state) => state.setAssistantResult);
   const activeTab = useBrowserStore((state) =>
     state.tabs.find((tab) => tab.workspaceId === activeWorkspaceId && tab.isActive)
   );
@@ -33,8 +38,38 @@ export default function RightPanel() {
       return "Choose a quick action after opening a page.";
     }
 
+    if (activeWorkspace?.assistantResult?.actionLabel === selectedAction) {
+      return activeWorkspace.assistantResult.content;
+    }
+
     return `${selectedAction} is prepared for ${activeTab.title || summarizeHost(activeTab.url)}. The result can feed notes, tasks, or your research board.`;
-  }, [activeTab, selectedAction]);
+  }, [activeTab, activeWorkspace?.assistantResult, selectedAction]);
+
+  const runAction = (action: string) => {
+    if (!activeWorkspace) {
+      return;
+    }
+
+    setSelectedAction(action);
+    const outcome = runAssistantAction(action, activeWorkspace, activeTab);
+    setAssistantResult(activeWorkspace.id, outcome.result);
+
+    if (outcome.suggestedNotes) {
+      appendWorkspaceNotes(activeWorkspace.id, outcome.suggestedNotes);
+    }
+
+    if (outcome.suggestedTasks?.length) {
+      addTasks(activeWorkspace.id, outcome.suggestedTasks);
+    }
+
+    if (outcome.suggestedSourceNote && activeTab) {
+      addSavedSource(activeWorkspace.id, {
+        title: activeTab.title || "Untitled source",
+        url: activeTab.url,
+        note: outcome.suggestedSourceNote,
+      });
+    }
+  };
 
   return (
     <div className="sidebar-right">
@@ -48,7 +83,7 @@ export default function RightPanel() {
               key={action}
               type="button"
               className={`prompt-chip ${selectedAction === action ? "active" : ""}`}
-              onClick={() => setSelectedAction(action)}
+              onClick={() => runAction(action)}
             >
               {action}
             </button>
@@ -75,9 +110,7 @@ export default function RightPanel() {
           <div className="card notes-header-card">
             <div className="notes-workspace-label">Citation Draft</div>
             <p className="muted">
-              {activeTab
-                ? `${activeTab.title || "Untitled page"} - ${summarizeHost(activeTab.url)}.`
-                : "Visit a page to draft a source citation."}
+              {activeWorkspace ? buildCitationDraft(activeWorkspace, activeTab) : "Visit a page to draft a source citation."}
             </p>
           </div>
           <div className="card notes-header-card">

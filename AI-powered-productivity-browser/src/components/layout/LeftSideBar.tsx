@@ -1,3 +1,4 @@
+import HistoryPanel from "../workspace/HistoryPanel";
 import IntentPanel from "../workspace/IntentPanel";
 import WorkspaceList from "../workspace/WorkspaceList";
 
@@ -11,6 +12,7 @@ export default function LeftSideBar() {
       <div className="sidebar-section">
         <IntentPanel />
       </div>
+      <HistoryPanel />
     </div>
   );
 }

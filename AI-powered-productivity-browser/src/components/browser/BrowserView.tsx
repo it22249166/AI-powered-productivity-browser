@@ -4,6 +4,7 @@ import { useWorkspaceStore } from "../../store/workspaceStore";
 
 export default function BrowserView() {
     const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
+    const addHistoryEntry = useWorkspaceStore((state) => state.addHistoryEntry);
     const activeTab = useBrowserStore((state) =>
         state.tabs.find((tab) => tab.workspaceId === activeWorkspaceId && tab.isActive)
     );
@@ -22,12 +23,22 @@ export default function BrowserView() {
         if (!webview || !activeTab) return;
 
         const syncNavigationState = () => {
+            const url = webview.getURL?.() || activeTab.url;
+            const title = webview.getTitle?.() || activeTab.title;
+
             updateTabState(activeTab.id, {
-                url: webview.getURL?.() || activeTab.url,
-                title: webview.getTitle?.() || activeTab.title,
+                url,
+                title,
                 canGoBack: webview.canGoBack?.() || false,
                 canGoForward: webview.canGoForward?.() || false,
             });
+
+            if (url && title) {
+                addHistoryEntry(activeWorkspaceId, {
+                    title,
+                    url,
+                });
+            }
         };
 
         const handleDidStartLoading = () => {
@@ -82,7 +93,7 @@ export default function BrowserView() {
             webview.removeEventListener("did-navigate", handleDidNavigate);
             webview.removeEventListener("did-navigate-in-page", handleDidNavigate);
         };
-    }, [activeTab, updateTabState]);
+    }, [activeTab, activeWorkspaceId, addHistoryEntry, updateTabState]);
 
     useEffect(() => {
         const webview = webviewRef.current;

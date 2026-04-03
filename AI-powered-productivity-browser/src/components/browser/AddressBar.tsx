@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useBrowserStore } from "../../store/browserStore";
+import { useRegionStore } from "../../store/regionStore";
 import { useWorkspaceStore } from "../../store/workspaceStore";
 
 export default function AddressBar() {
   const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
+  const searchRegion = useRegionStore((state) => state.searchRegion);
   const { tabs, updateTabUrl } = useBrowserStore();
   const activeTab = tabs.find(
     (tab) => tab.workspaceId === activeWorkspaceId && tab.isActive
@@ -17,7 +19,7 @@ export default function AddressBar() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeTab) return;
-    updateTabUrl(activeTab.id, value);
+    updateTabUrl(activeTab.id, value, searchRegion);
   };
 
   return (

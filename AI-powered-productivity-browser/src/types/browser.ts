@@ -25,10 +25,24 @@ export type SavedSource = {
   note: string;
 };
 
+export type HistoryEntry = {
+  id: string;
+  title: string;
+  url: string;
+  visitedAt: number;
+};
+
 export type WorkspaceTask = {
   id: string;
   text: string;
   done: boolean;
+};
+
+export type AssistantResult = {
+  title: string;
+  content: string;
+  actionLabel: string;
+  createdAt: number;
 };
 
 export type Workspace = {
@@ -38,5 +52,7 @@ export type Workspace = {
   goal: string;
   notes: string;
   savedSources: SavedSource[];
+  history: HistoryEntry[];
   tasks: WorkspaceTask[];
+  assistantResult: AssistantResult | null;
 };

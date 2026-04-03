@@ -16,6 +16,21 @@
     --radius: 16px;
 }
 
+:root[data-theme="light"] {
+    --bg-primary: #f4f8fc;
+    --bg-secondary: #eaf2fb;
+    --bg-tertiary: #dce9f7;
+    --panel: rgba(255, 255, 255, 0.95);
+    --panel-2: rgba(240, 247, 255, 0.98);
+    --border: rgba(17, 57, 102, 0.12);
+    --text-primary: #0f2236;
+    --text-secondary: #5b728b;
+    --accent: #0d9488;
+    --accent-hover: #0f766e;
+    --danger: #dc2626;
+    --success: #16a34a;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -38,6 +53,13 @@ body {
         linear-gradient(180deg, #081522 0%, #040b12 100%);
     color: var(--text-primary);
     overflow: hidden;
+}
+
+:root[data-theme="light"] body {
+    background:
+        radial-gradient(circle at top left, rgba(13, 148, 136, 0.12), transparent 26%),
+        radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 22%),
+        linear-gradient(180deg, #f7fbff 0%, #edf4fb 100%);
 }
 
 /* Scrollbar */
@@ -76,6 +98,13 @@ body {
     backdrop-filter: blur(18px);
 }
 
+:root[data-theme="light"] .topbar,
+:root[data-theme="light"] .sidebar-left,
+:root[data-theme="light"] .sidebar-right,
+:root[data-theme="light"] .browse-first-banner {
+    background: rgba(255, 255, 255, 0.82);
+}
+
 .toolbar-row {
     display: flex;
     align-items: center;
@@ -103,6 +132,24 @@ body {
     background: rgba(47, 196, 178, 0.08);
     color: var(--text-secondary);
     font-size: 0.85rem;
+}
+
+.topbar-region {
+    display: inline-flex;
+    align-items: center;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.topbar-region.active {
+    border-color: rgba(47, 196, 178, 0.45);
+    background: rgba(47, 196, 178, 0.12);
+    color: var(--text-primary);
 }
 
 .topbar-status-dot {
@@ -201,6 +248,41 @@ body {
     min-height: 0;
     display: flex;
     flex-direction: column;
+    position: relative;
+}
+
+.floating-mode-changer {
+    position: absolute;
+    top: 22px;
+    left: 26px;
+    z-index: 12;
+}
+
+.floating-theme-changer {
+    position: absolute;
+    top: 22px;
+    right: 26px;
+    z-index: 12;
+}
+
+.floating-theme-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    height: 42px;
+    padding: 0 14px;
+    border: 1px solid rgba(47, 196, 178, 0.35);
+    border-radius: 999px;
+    background: rgba(8, 21, 34, 0.84);
+    backdrop-filter: blur(12px);
+    color: var(--text-primary);
+    cursor: pointer;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+}
+
+.floating-mode-label {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
 }
 
 .section-title {
@@ -477,6 +559,7 @@ body {
     color: var(--text-secondary);
     line-height: 1.45;
 }
+
 
 /* Notes */
 .notes-header-card {
@@ -784,10 +867,15 @@ body {
 .assistant-preview p {
     color: var(--text-primary);
     line-height: 1.5;
+    white-space: pre-wrap;
 }
 
 .source-board {
     margin-bottom: 14px;
+}
+
+.result-preview {
+    margin-top: 0;
 }
 
 .compare-rail {
@@ -876,6 +964,44 @@ body {
     font-weight: 600;
 }
 
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.history-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-primary);
+    text-align: left;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.history-item:hover {
+    border-color: rgba(47, 196, 178, 0.45);
+    background: rgba(47, 196, 178, 0.08);
+}
+
+.history-item span,
+.history-item small {
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.compare-summary {
+    margin-top: 14px;
+}
+
 @keyframes pulse {
     0%,
     100% {
@@ -947,6 +1073,10 @@ body {
     }
 
     .focus-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .region-auth-grid {
         grid-template-columns: 1fr;
     }
 }
